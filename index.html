@@ -18,7 +18,7 @@
     <div class="rules-box">
       <p class="rules-item">👈👉 Desliza a los lados para cambiar de carril</p>
       <p class="rules-item">❤️ Evita obstáculos — tienes 3 vidas</p>
-      <p class="rules-item">😄 Recoge la cara de Carlos para puntos</p>
+      <p class="rules-item">😄 Recoge CARLITOS (la cara de Carlos) — ¡cuentan como tu puntuación!</p>
       <p class="rules-item">⚡🛡️ Power-ups: impulso y escudo</p>
     </div>
 
@@ -35,7 +35,10 @@
   <section id="screen-game" class="screen">
     <canvas id="game-canvas"></canvas>
     <div id="hud">
-      <div id="hud-distance">0m</div>
+      <div class="hud-left">
+        <div id="hud-distance">0m</div>
+        <div id="hud-carlitos">🧒 0</div>
+      </div>
       <div id="hud-hearts">♥ ♥ ♥</div>
       <div id="hud-powerup"></div>
     </div>
@@ -71,9 +74,9 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=4"></script>
-<script src="leaderboard.js?v=4"></script>
-<script src="sprites.js?v=4"></script>
-<script src="game.js?v=4"></script>
+<script src="firebase-config.js?v=5"></script>
+<script src="leaderboard.js?v=5"></script>
+<script src="sprites.js?v=5"></script>
+<script src="game.js?v=5"></script>
 </body>
 </html>
