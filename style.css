@@ -232,7 +232,14 @@ html, body {
   text-align: center;
   padding: 0 16px;
 }
-.end-record { font-size: 14px; color: #fff; margin-bottom: 20px; min-height: 18px; }
+.end-record { font-size: 14px; color: #fff; margin-bottom: 8px; min-height: 18px; }
+.end-collected {
+  font-size: 13px;
+  color: var(--blue-light);
+  margin-bottom: 16px;
+  max-width: 280px;
+  text-align: center;
+}
 
 .leaderboard-box {
   width: 100%;

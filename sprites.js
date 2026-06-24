@@ -7,7 +7,12 @@ let carlosFaceReady = false;
 carlosFaceImg.onload = () => { carlosFaceReady = true; };
 carlosFaceImg.src = 'faces/carlos.png';
 
-const FRIEND_COUNT = 16;
+const FRIEND_COUNT = 15;
+const FRIEND_NAMES = [
+  'Mario', 'Martín', 'Beni', 'José', 'Berta',
+  'Martín', 'José', 'Mario', 'Beni', 'Ana',
+  'Valeria', 'Berta', 'Abril', 'Estrella', 'Erika',
+];
 const friendFaceImgs = [];
 for (let i = 1; i <= FRIEND_COUNT; i++) {
   const img = new Image();
@@ -179,18 +184,36 @@ function drawCarlosFace(ctx, x, y, t) {
   ctx.restore();
 }
 
-// Coleccionable secundario: caras de amigos, sin movimiento ni recorte circular.
-function drawFriendFace(ctx, x, y, friendIndex) {
+// Coleccionable secundario: caras de amigos, con un balanceo sutil (menor que el de Carlos).
+function drawFriendFace(ctx, x, y, friendIndex, t) {
   const size = 40;
+  const sway = Math.sin(t * 2.4) * 4;
   const img = friendFaceImgs[friendIndex % friendFaceImgs.length];
   ctx.save();
-  ctx.translate(x, y);
+  ctx.translate(x + sway, y);
   if (img.ready) {
     ctx.drawImage(img, -size / 2, -size / 2, size, size);
   } else {
     ctx.fillStyle = '#0ea5e9';
     ctx.beginPath(); ctx.arc(0, 0, size / 2, 0, 7); ctx.fill();
   }
+  ctx.restore();
+}
+
+// Texto flotante con el nombre del amigo/Carlos al recogerlo: sube y se desvanece.
+function drawNamePopup(ctx, x, y, name, progress) {
+  const rise = progress * 30;
+  const alpha = 1 - progress;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = 'bold 16px Impact, "Arial Black", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#0f172a';
+  ctx.strokeText(name, x, y - rise);
+  ctx.fillStyle = '#FBBF24';
+  ctx.fillText(name, x, y - rise);
   ctx.restore();
 }
 

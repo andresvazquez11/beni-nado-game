@@ -19,9 +19,12 @@
   let strokePhase = 0;
   let activePowerup = null, powerupTimer = 0;
   let entities = []; // {type, lane, y, ...}
+  let popups = []; // {x, y, name, age} - texto flotante al recoger una cara
+  let collected = {}; // nombre -> veces recogido, para el resumen final
   let spawnTimer = 0, spawnInterval = 1.1;
   let lastTs = 0;
   let envMix = 0; // 0 = piscina, 1 = mar abierto
+  const POPUP_DURATION = 0.9;
 
   // ---------- Setup canvas ----------
   function setupCanvas() {
@@ -107,7 +110,7 @@
       const isCarlos = Math.random() < 0.5;
       entities.push({
         type: 'coin',
-        face: isCarlos ? 'carlos' : Math.floor(Math.random() * 16),
+        face: isCarlos ? 'carlos' : Math.floor(Math.random() * FRIEND_COUNT),
         lane: spawnLane,
         y: -30,
         hit: false,
@@ -135,7 +138,7 @@
     distance = 0; carlitos = 0; amigos = 0; hearts = 3; invulnTimer = 0;
     speed = 90; strokePhase = 0;
     activePowerup = null; powerupTimer = 0;
-    entities = []; spawnTimer = 0; spawnInterval = 1.1;
+    entities = []; popups = []; collected = {}; spawnTimer = 0; spawnInterval = 1.1;
     envMix = 0;
 
     updateHUD();
@@ -174,6 +177,11 @@
     document.getElementById('end-record').textContent =
       (isRecord ? 'Nuevo récord personal 🎉 · ' : ('Tu mejor marca: ' + Math.max(best, score) + ' puntos · ')) +
       Math.round(distance) + 'm recorridos';
+
+    const namesList = Object.keys(collected)
+      .map(name => name + (collected[name] > 1 ? ' x' + collected[name] : ''))
+      .join(', ');
+    document.getElementById('end-collected').textContent = namesList ? 'Atrapaste a: ' + namesList : '';
 
     Leaderboard.submitScore(player.name, carlitos, amigos, Math.round(distance), player.skin.id)
       .then(renderLeaderboardEnd)
@@ -262,6 +270,9 @@
     entities.forEach(e => { e.y += moveSpeed; });
     entities = entities.filter(e => e.y < CANVAS_H + 40);
 
+    popups.forEach(p => { p.age += dt / POPUP_DURATION; });
+    popups = popups.filter(p => p.age < 1);
+
     checkCollisions();
 
     if (hearts <= 0) endGame();
@@ -277,7 +288,10 @@
 
       if (e.type === 'coin') {
         e.hit = true;
+        const name = e.face === 'carlos' ? 'Carlos' : FRIEND_NAMES[e.face];
         if (e.face === 'carlos') carlitos++; else amigos++;
+        collected[name] = (collected[name] || 0) + 1;
+        popups.push({ x: LANE_X[e.lane], y: SWIMMER_Y - 20, name, age: 0 });
         entities = entities.filter(x => x !== e);
       } else if (e.type === 'powerup') {
         e.hit = true;
@@ -308,6 +322,7 @@
     drawLanes();
     entities.forEach(drawEntity);
     drawSwimmer(ctx, laneX, SWIMMER_Y, player.skin, strokePhase, invulnTimer > 0);
+    popups.forEach(p => drawNamePopup(ctx, p.x, p.y, p.name, p.age));
   }
 
   function drawBackground() {
@@ -337,7 +352,7 @@
     const x = LANE_X[e.lane];
     if (e.type === 'coin') {
       if (e.face === 'carlos') drawCarlosFace(ctx, x, e.y, distance + e.lane);
-      else drawFriendFace(ctx, x, e.y, e.face);
+      else drawFriendFace(ctx, x, e.y, e.face, distance + e.lane);
     }
     else if (e.type === 'powerup') drawPowerup(ctx, x, e.y, e.kind);
     else if (e.type === 'obstacle') {
