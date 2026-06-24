@@ -77,8 +77,13 @@
     canvas.addEventListener('touchend', (e) => {
       if (touchStartX === null) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
+      const dbg = document.getElementById('debug-swipe');
       if (Math.abs(dx) > 25) {
-        if (dx < 0) changeLane(-1); else changeLane(1);
+        const dir = dx < 0 ? -1 : 1;
+        changeLane(dir);
+        if (dbg) dbg.textContent = 'dx=' + dx.toFixed(0) + ' dir=' + dir + ' lane=' + lane;
+      } else if (dbg) {
+        dbg.textContent = 'dx=' + dx.toFixed(0) + ' (muy pequeño, ignorado)';
       }
       touchStartX = null;
     }, { passive: true });
