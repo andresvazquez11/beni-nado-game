@@ -71,17 +71,17 @@
   }
 
   // ---------- Input ----------
-  let touchStartX = null;
   function setupInput() {
-    canvas.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    canvas.addEventListener('touchend', (e) => {
-      if (touchStartX === null) return;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(dx) > 25) {
-        changeLane(dx < 0 ? -1 : 1);
-      }
-      touchStartX = null;
-    }, { passive: true });
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+
+    const pressLeft = (e) => { e.preventDefault(); changeLane(-1); };
+    const pressRight = (e) => { e.preventDefault(); changeLane(1); };
+
+    btnLeft.addEventListener('touchstart', pressLeft, { passive: false });
+    btnRight.addEventListener('touchstart', pressRight, { passive: false });
+    btnLeft.addEventListener('click', () => changeLane(-1));
+    btnRight.addEventListener('click', () => changeLane(1));
 
     window.addEventListener('keydown', (e) => {
       if (state !== 'playing') return;

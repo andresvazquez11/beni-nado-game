@@ -196,6 +196,32 @@ html, body {
 }
 #countdown.active { display: flex; }
 
+#lane-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 24px;
+  pointer-events: none;
+}
+.lane-btn {
+  pointer-events: auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15,23,42,0.55);
+  color: #fff;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.lane-btn:active { background: rgba(251,191,36,0.7); }
+
 /* END SCREEN */
 .end-title { color: var(--red); font-size: 22px; margin: 30px 0 10px; text-align: center; }
 .end-distance {
