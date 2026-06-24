@@ -179,9 +179,9 @@ function drawCarlosFace(ctx, x, y, t) {
   ctx.restore();
 }
 
-// Coleccionable secundario: caras de amigos, más pequeñas, sin movimiento ni recorte circular.
+// Coleccionable secundario: caras de amigos, sin movimiento ni recorte circular.
 function drawFriendFace(ctx, x, y, friendIndex) {
-  const size = 28;
+  const size = 40;
   const img = friendFaceImgs[friendIndex % friendFaceImgs.length];
   ctx.save();
   ctx.translate(x, y);

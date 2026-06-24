@@ -14,7 +14,7 @@
   let player = { name: '', skin: SKINS[0] };
 
   let lane = 1, laneX = LANE_X[1], laneTargetX = LANE_X[1];
-  let distance = 0, carlitos = 0, hearts = 3, invulnTimer = 0;
+  let distance = 0, carlitos = 0, amigos = 0, hearts = 3, invulnTimer = 0;
   let speed = 90; // px/seg lógicos avanzando "hacia delante" (representado como velocidad de scroll)
   let strokePhase = 0;
   let activePowerup = null, powerupTimer = 0;
@@ -132,7 +132,7 @@
     localStorage.setItem('beni_skin', player.skin.id);
 
     lane = 1; laneX = LANE_X[1]; laneTargetX = LANE_X[1];
-    distance = 0; carlitos = 0; hearts = 3; invulnTimer = 0;
+    distance = 0; carlitos = 0; amigos = 0; hearts = 3; invulnTimer = 0;
     speed = 90; strokePhase = 0;
     activePowerup = null; powerupTimer = 0;
     entities = []; spawnTimer = 0; spawnInterval = 1.1;
@@ -165,16 +165,17 @@
 
   function endGame() {
     state = 'gameover';
+    const score = carlitos + amigos;
     const best = parseFloat(localStorage.getItem('beni_best_' + player.name) || '0');
-    const isRecord = carlitos > best;
-    if (isRecord) localStorage.setItem('beni_best_' + player.name, carlitos.toFixed(0));
+    const isRecord = score > best;
+    if (isRecord) localStorage.setItem('beni_best_' + player.name, score.toFixed(0));
 
-    document.getElementById('end-distance').textContent = carlitos + ' CARLITOS';
+    document.getElementById('end-distance').textContent = carlitos + ' CARLITOS · ' + amigos + ' AMIGOS';
     document.getElementById('end-record').textContent =
-      (isRecord ? 'Nuevo récord personal 🎉 · ' : ('Tu mejor marca: ' + Math.max(best, carlitos) + ' CARLITOS · ')) +
+      (isRecord ? 'Nuevo récord personal 🎉 · ' : ('Tu mejor marca: ' + Math.max(best, score) + ' puntos · ')) +
       Math.round(distance) + 'm recorridos';
 
-    Leaderboard.submitScore(player.name, carlitos, Math.round(distance), player.skin.id)
+    Leaderboard.submitScore(player.name, carlitos, amigos, Math.round(distance), player.skin.id)
       .then(renderLeaderboardEnd)
       .catch(() => renderLeaderboardEnd());
 
@@ -193,7 +194,7 @@
       const nameSpan = document.createElement('span');
       nameSpan.textContent = String(r.name || 'Nadador').slice(0, 12);
       const distSpan = document.createElement('span');
-      distSpan.textContent = (Number(r.carlitos) || 0) + ' CARLITOS';
+      distSpan.textContent = (Number(r.carlitos) || 0) + ' C · ' + (Number(r.amigos) || 0) + ' A';
       li.appendChild(nameSpan);
       li.appendChild(distSpan);
       if (r.name === player.name) li.classList.add('you');
@@ -210,6 +211,7 @@
   function updateHUD() {
     document.getElementById('hud-distance').textContent = Math.round(distance) + 'm';
     document.getElementById('hud-carlitos').textContent = '🧒 ' + carlitos;
+    document.getElementById('hud-amigos').textContent = '👫 ' + amigos;
     document.getElementById('hud-hearts').textContent = '♥ '.repeat(hearts) + '♡ '.repeat(3 - hearts);
     const pu = document.getElementById('hud-powerup');
     if (activePowerup) {
@@ -274,7 +276,8 @@
       if (Math.abs(e.y - SWIMMER_Y) > 22) return;
 
       if (e.type === 'coin') {
-        e.hit = true; carlitos++;
+        e.hit = true;
+        if (e.face === 'carlos') carlitos++; else amigos++;
         entities = entities.filter(x => x !== e);
       } else if (e.type === 'powerup') {
         e.hit = true;

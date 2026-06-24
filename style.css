@@ -159,6 +159,11 @@ html, body {
   color: var(--yellow);
   text-shadow: 2px 2px 0 #000;
 }
+#hud-amigos {
+  font-size: 15px;
+  color: var(--blue-light);
+  text-shadow: 2px 2px 0 #000;
+}
 #hud-hearts {
   font-size: 18px;
   color: var(--yellow);
@@ -193,7 +198,14 @@ html, body {
 
 /* END SCREEN */
 .end-title { color: var(--red); font-size: 22px; margin: 30px 0 10px; text-align: center; }
-.end-distance { font-size: 48px; color: var(--yellow); text-shadow: 3px 3px 0 var(--blue-dark); margin-bottom: 4px; }
+.end-distance {
+  font-size: 26px;
+  color: var(--yellow);
+  text-shadow: 2px 2px 0 var(--blue-dark);
+  margin-bottom: 4px;
+  text-align: center;
+  padding: 0 16px;
+}
 .end-record { font-size: 14px; color: #fff; margin-bottom: 20px; min-height: 18px; }
 
 .leaderboard-box {

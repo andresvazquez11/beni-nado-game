@@ -28,25 +28,28 @@ const Leaderboard = (function () {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(rows));
   }
 
-  function submitScore(name, carlitos, distance, skinId) {
+  function submitScore(name, carlitos, amigos, distance, skinId) {
+    const score = carlitos + amigos;
     if (usingFirebase) {
       return db.collection('scores').add({
         name: name,
         carlitos: carlitos,
+        amigos: amigos,
+        score: score,
         distance: distance,
         skin: skinId,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       }).catch(err => {
         console.warn('Error al guardar en Firestore, usando local.', err);
-        return submitScoreLocal(name, carlitos, distance, skinId);
+        return submitScoreLocal(name, carlitos, amigos, score, distance, skinId);
       });
     }
-    return submitScoreLocal(name, carlitos, distance, skinId);
+    return submitScoreLocal(name, carlitos, amigos, score, distance, skinId);
   }
 
-  function submitScoreLocal(name, carlitos, distance, skinId) {
+  function submitScoreLocal(name, carlitos, amigos, score, distance, skinId) {
     const rows = localGetAll();
-    rows.push({ name, carlitos, distance, skin: skinId });
+    rows.push({ name, carlitos, amigos, score, distance, skin: skinId });
     localSave(rows);
     return Promise.resolve();
   }
@@ -54,7 +57,7 @@ const Leaderboard = (function () {
   function getTop(limit) {
     if (usingFirebase) {
       return db.collection('scores')
-        .orderBy('carlitos', 'desc')
+        .orderBy('score', 'desc')
         .limit(limit)
         .get()
         .then(snap => snap.docs.map(d => d.data()))
@@ -67,7 +70,7 @@ const Leaderboard = (function () {
   }
 
   function getTopLocal(limit) {
-    const rows = localGetAll().sort((a, b) => (b.carlitos || 0) - (a.carlitos || 0)).slice(0, limit);
+    const rows = localGetAll().sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, limit);
     return Promise.resolve(rows);
   }
 
