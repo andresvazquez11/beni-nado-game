@@ -1,11 +1,21 @@
 // Dibujo 100% por código (canvas), sin imágenes externas ni coste de generación IA,
-// salvo el coleccionable "cara de Carlos" (imagen real, carlos-face.png).
+// salvo los coleccionables de caras reales (Carlos + amigos, PNG con fondo eliminado).
 // Proporciones "caricatura/avatar": cabeza grande, sonrisa, mofletes, gorro y gafas de color.
 
 const carlosFaceImg = new Image();
 let carlosFaceReady = false;
 carlosFaceImg.onload = () => { carlosFaceReady = true; };
-carlosFaceImg.src = 'carlos-face.png';
+carlosFaceImg.src = 'faces/carlos.png';
+
+const FRIEND_COUNT = 16;
+const friendFaceImgs = [];
+for (let i = 1; i <= FRIEND_COUNT; i++) {
+  const img = new Image();
+  img.ready = false;
+  img.onload = () => { img.ready = true; };
+  img.src = 'faces/friend-' + String(i).padStart(2, '0') + '.png';
+  friendFaceImgs.push(img);
+}
 
 const SKINS = [
   { id: 'cna',   cap: '#0066cc', suit: '#FBBF24', name: 'CNA' },
@@ -153,27 +163,34 @@ function drawCoin(ctx, x, y, t) {
   ctx.restore();
 }
 
-// Coleccionable: la cara de Carlos, en un círculo flotante con aro amarillo.
+// Coleccionable PRINCIPAL: la cara de Carlos, grande, recorte real sin fondo,
+// con balanceo de izquierda a derecha (es el coleccionable estrella).
 function drawCarlosFace(ctx, x, y, t) {
-  const bob = Math.sin(t * 3) * 2;
-  const r = 13;
+  const size = 46; // ocupa buena parte del carril
+  const sway = Math.sin(t * 2.4) * 10;
   ctx.save();
-  ctx.translate(x, y + bob);
-
+  ctx.translate(x + sway, y);
   if (carlosFaceReady) {
-    ctx.save();
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.closePath(); ctx.clip();
-    ctx.drawImage(carlosFaceImg, -r, -r, r * 2, r * 2);
-    ctx.restore();
+    ctx.drawImage(carlosFaceImg, -size / 2, -size / 2, size, size);
   } else {
-    // mientras carga la imagen, círculo placeholder
     ctx.fillStyle = '#FBBF24';
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, size / 2, 0, 7); ctx.fill();
   }
+  ctx.restore();
+}
 
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#FBBF24';
-  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
+// Coleccionable secundario: caras de amigos, más pequeñas, sin movimiento ni recorte circular.
+function drawFriendFace(ctx, x, y, friendIndex) {
+  const size = 28;
+  const img = friendFaceImgs[friendIndex % friendFaceImgs.length];
+  ctx.save();
+  ctx.translate(x, y);
+  if (img.ready) {
+    ctx.drawImage(img, -size / 2, -size / 2, size, size);
+  } else {
+    ctx.fillStyle = '#0ea5e9';
+    ctx.beginPath(); ctx.arc(0, 0, size / 2, 0, 7); ctx.fill();
+  }
   ctx.restore();
 }
 

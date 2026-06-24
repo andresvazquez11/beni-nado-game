@@ -77,13 +77,8 @@
     canvas.addEventListener('touchend', (e) => {
       if (touchStartX === null) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
-      const dbg = document.getElementById('debug-swipe');
       if (Math.abs(dx) > 25) {
-        const dir = dx < 0 ? -1 : 1;
-        changeLane(dir);
-        if (dbg) dbg.textContent = 'dx=' + dx.toFixed(0) + ' dir=' + dir + ' lane=' + lane;
-      } else if (dbg) {
-        dbg.textContent = 'dx=' + dx.toFixed(0) + ' (muy pequeño, ignorado)';
+        changeLane(dx < 0 ? -1 : 1);
       }
       touchStartX = null;
     }, { passive: true });
@@ -108,7 +103,15 @@
     if (r < 0.5) {
       entities.push({ type: 'obstacle', kind: pickObstacleKind(), lane: spawnLane, y: -30, hit: false });
     } else if (r < 0.85) {
-      entities.push({ type: 'coin', lane: spawnLane, y: -30, hit: false });
+      // Carlos es el coleccionable principal (más frecuente); el resto son amigos (variedad).
+      const isCarlos = Math.random() < 0.5;
+      entities.push({
+        type: 'coin',
+        face: isCarlos ? 'carlos' : Math.floor(Math.random() * 16),
+        lane: spawnLane,
+        y: -30,
+        hit: false,
+      });
     } else {
       entities.push({ type: 'powerup', kind: Math.random() < 0.5 ? 'boost' : 'shield', lane: spawnLane, y: -30, hit: false });
     }
@@ -329,7 +332,10 @@
 
   function drawEntity(e) {
     const x = LANE_X[e.lane];
-    if (e.type === 'coin') drawCarlosFace(ctx, x, e.y, distance + e.lane);
+    if (e.type === 'coin') {
+      if (e.face === 'carlos') drawCarlosFace(ctx, x, e.y, distance + e.lane);
+      else drawFriendFace(ctx, x, e.y, e.face);
+    }
     else if (e.type === 'powerup') drawPowerup(ctx, x, e.y, e.kind);
     else if (e.type === 'obstacle') {
       if (e.kind === 'buoy') drawObstacleBuoy(ctx, x, e.y);

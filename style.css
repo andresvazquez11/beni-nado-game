@@ -191,19 +191,6 @@ html, body {
 }
 #countdown.active { display: flex; }
 
-#debug-swipe {
-  position: absolute;
-  bottom: 70px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 13px;
-  color: #fff;
-  background: rgba(0,0,0,0.6);
-  padding: 4px 0;
-  pointer-events: none;
-}
-
 /* END SCREEN */
 .end-title { color: var(--red); font-size: 22px; margin: 30px 0 10px; text-align: center; }
 .end-distance { font-size: 48px; color: var(--yellow); text-shadow: 3px 3px 0 var(--blue-dark); margin-bottom: 4px; }
