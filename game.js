@@ -321,7 +321,7 @@
 
   function drawEntity(e) {
     const x = LANE_X[e.lane];
-    if (e.type === 'coin') drawCoin(ctx, x, e.y, distance + e.lane);
+    if (e.type === 'coin') drawCarlosFace(ctx, x, e.y, distance + e.lane);
     else if (e.type === 'powerup') drawPowerup(ctx, x, e.y, e.kind);
     else if (e.type === 'obstacle') {
       if (e.kind === 'buoy') drawObstacleBuoy(ctx, x, e.y);

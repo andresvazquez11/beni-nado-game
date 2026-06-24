@@ -1,5 +1,11 @@
-// Dibujo 100% por código (canvas), sin imágenes externas ni coste de generación IA.
+// Dibujo 100% por código (canvas), sin imágenes externas ni coste de generación IA,
+// salvo el coleccionable "cara de Carlos" (imagen real, carlos-face.png).
 // Proporciones "caricatura/avatar": cabeza grande, sonrisa, mofletes, gorro y gafas de color.
+
+const carlosFaceImg = new Image();
+let carlosFaceReady = false;
+carlosFaceImg.onload = () => { carlosFaceReady = true; };
+carlosFaceImg.src = 'carlos-face.png';
 
 const SKINS = [
   { id: 'cna',   cap: '#0066cc', suit: '#FBBF24', name: 'CNA' },
@@ -144,6 +150,30 @@ function drawCoin(ctx, x, y, t) {
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.ellipse(0, 0, 8 * squash, 8, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+// Coleccionable: la cara de Carlos, en un círculo flotante con aro amarillo.
+function drawCarlosFace(ctx, x, y, t) {
+  const bob = Math.sin(t * 3) * 2;
+  const r = 13;
+  ctx.save();
+  ctx.translate(x, y + bob);
+
+  if (carlosFaceReady) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.closePath(); ctx.clip();
+    ctx.drawImage(carlosFaceImg, -r, -r, r * 2, r * 2);
+    ctx.restore();
+  } else {
+    // mientras carga la imagen, círculo placeholder
+    ctx.fillStyle = '#FBBF24';
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
+  }
+
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#FBBF24';
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
   ctx.restore();
 }
 
