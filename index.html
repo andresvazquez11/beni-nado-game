@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>El Beni Nado</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- PANTALLA 1: MENÚ -->
+  <section id="screen-menu" class="screen active">
+    <h1 class="title">EL BENI<br>NADO</h1>
+    <p class="subtitle">@elbenidelagente · Club Natación Axarquía</p>
+
+    <input id="player-name" class="text-input" type="text" maxlength="12" placeholder="Tu nombre...">
+
+    <p class="label">Elige tu nadador</p>
+    <div id="skin-picker" class="skin-picker"></div>
+
+    <button id="btn-play" class="btn-primary">JUGAR</button>
+    <button id="btn-leaderboard" class="btn-link">Ver récords 🏆</button>
+  </section>
+
+  <!-- PANTALLA 2: JUEGO -->
+  <section id="screen-game" class="screen">
+    <canvas id="game-canvas"></canvas>
+    <div id="hud">
+      <div id="hud-distance">0m</div>
+      <div id="hud-hearts">♥ ♥ ♥</div>
+      <div id="hud-powerup"></div>
+    </div>
+    <div id="countdown"></div>
+  </section>
+
+  <!-- PANTALLA 3: FIN DE PARTIDA -->
+  <section id="screen-end" class="screen">
+    <h2 class="end-title">¡FIN DE LA CARRERA!</h2>
+    <div id="end-distance" class="end-distance">0 m</div>
+    <div id="end-record" class="end-record"></div>
+
+    <div id="leaderboard-box" class="leaderboard-box">
+      <p class="label">🏆 Récords</p>
+      <ol id="leaderboard-list"></ol>
+    </div>
+
+    <button id="btn-retry" class="btn-primary">JUGAR DE NUEVO</button>
+    <button id="btn-menu" class="btn-link">Menú</button>
+  </section>
+
+  <!-- PANTALLA RÉCORDS (desde el menú) -->
+  <section id="screen-records" class="screen">
+    <h2 class="end-title">🏆 Récords</h2>
+    <div class="leaderboard-box">
+      <ol id="leaderboard-list-2"></ol>
+    </div>
+    <button id="btn-records-back" class="btn-primary">VOLVER</button>
+  </section>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="leaderboard.js"></script>
+<script src="sprites.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
