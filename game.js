@@ -71,22 +71,22 @@
   }
 
   // ---------- Input ----------
-  let touchStartY = null;
+  let touchStartX = null;
   function setupInput() {
-    canvas.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; }, { passive: true });
+    canvas.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
     canvas.addEventListener('touchend', (e) => {
-      if (touchStartY === null) return;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      if (Math.abs(dy) > 25) {
-        if (dy < 0) changeLane(-1); else changeLane(1);
+      if (touchStartX === null) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 25) {
+        if (dx < 0) changeLane(-1); else changeLane(1);
       }
-      touchStartY = null;
+      touchStartX = null;
     }, { passive: true });
 
     window.addEventListener('keydown', (e) => {
       if (state !== 'playing') return;
-      if (e.key === 'ArrowUp') changeLane(-1);
-      if (e.key === 'ArrowDown') changeLane(1);
+      if (e.key === 'ArrowLeft') changeLane(-1);
+      if (e.key === 'ArrowRight') changeLane(1);
     });
   }
 
