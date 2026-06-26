@@ -2,11 +2,11 @@
   'use strict';
 
   // ---------- Estado global ----------
-  const LANES = 3;
   const CANVAS_W = 360;
   const CANVAS_H = 640;
-  const LANE_X = [CANVAS_W * 0.25, CANVAS_W * 0.5, CANVAS_W * 0.75];
-  const LANE_Y = [CANVAS_H * 0.3, CANVAS_H * 0.5, CANVAS_H * 0.7];
+  const LANE_X = [CANVAS_W * 0.25, CANVAS_W * 0.5, CANVAS_W * 0.75]; // Nivel 1: 3 carriles
+  const LANE_Y = [0.18, 0.34, 0.5, 0.66, 0.82].map(f => f * CANVAS_H); // Nivel 2: 5 carriles
+  function laneCount() { return levelMode === 2 ? LANE_Y.length : LANE_X.length; }
   const SWIMMER_Y = CANVAS_H * 0.72;
   const SWIMMER_X = CANVAS_W * 0.22;
   const POOL_TO_OCEAN_DISTANCE = 150;
@@ -127,7 +127,7 @@
 
   function changeLane(dir) {
     if (state !== 'playing') return;
-    lane = Math.max(0, Math.min(LANES - 1, lane + dir));
+    lane = Math.max(0, Math.min(laneCount() - 1, lane + dir));
     laneTargetPos = (levelMode === 2 ? LANE_Y : LANE_X)[lane];
   }
 
@@ -137,14 +137,15 @@
 
   function spawnEntity() {
     const r = Math.random();
-    const spawnLane = Math.floor(Math.random() * LANES);
-    
+    const nLanes = laneCount();
+    const spawnLane = Math.floor(Math.random() * nLanes);
+
     if (levelMode === 2 && Math.random() < 0.20) {
       entities.push({ type: 'water_ring', lane: spawnLane, pos: spawnStartPos(), hit: false });
     } else if (r < 0.5) {
       entities.push({ type: 'obstacle', kind: pickObstacleKind(), lane: spawnLane, pos: spawnStartPos(), hit: false });
       if (levelMode === 2 && Math.random() < 0.25) {
-        const otherLane = (spawnLane + 1 + Math.floor(Math.random() * (LANES - 1))) % LANES;
+        const otherLane = (spawnLane + 1 + Math.floor(Math.random() * (nLanes - 1))) % nLanes;
         entities.push({ type: 'obstacle', kind: pickObstacleKind(), lane: otherLane, pos: spawnStartPos() - 60, hit: false });
       }
     } else if (r < 0.85) {
@@ -175,8 +176,8 @@
     localStorage.setItem('beni_name', player.name);
     localStorage.setItem('beni_skin', player.skin.id);
 
-    lane = 1;
-    laneTargetPos = (levelMode === 2 ? LANE_Y : LANE_X)[1];
+    lane = Math.floor(laneCount() / 2);
+    laneTargetPos = (levelMode === 2 ? LANE_Y : LANE_X)[lane];
     lanePos = laneTargetPos;
     distance = 0; carlitos = 0; amigos = 0; hearts = 3; invulnTimer = 0;
     speed = 90; strokePhase = 0;
@@ -414,10 +415,69 @@
   }
 
   function drawBackground() {
+    if (levelMode === 2) {
+      drawCircusUnderwaterBackground();
+      return;
+    }
     const poolColor = '#0ea5e9';
     const oceanColor = '#0066cc';
     ctx.fillStyle = lerpColor(poolColor, oceanColor, envMix);
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  }
+
+  // Fondo del Nivel 2: profundidad subacuática (gradiente, rayos de luz, burbujas)
+  // + banderines de circo en el borde superior.
+  function drawCircusUnderwaterBackground() {
+    const topColor = lerpColor('#38bdf8', '#0ea5e9', envMix);
+    const bottomColor = lerpColor('#0369a1', '#021024', envMix);
+    const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    grad.addColorStop(0, topColor);
+    grad.addColorStop(1, bottomColor);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Rayos de luz que se desplazan lentamente con el avance
+    ctx.save();
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 4; i++) {
+      const baseX = (((i * 97) - distance * 4) % (CANVAS_W + 160)) - 80;
+      ctx.beginPath();
+      ctx.moveTo(baseX, 0);
+      ctx.lineTo(baseX + 60, 0);
+      ctx.lineTo(baseX - 40, CANVAS_H);
+      ctx.lineTo(baseX - 100, CANVAS_H);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Burbujas subiendo
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    for (let i = 0; i < 14; i++) {
+      const seed = i * 53.7;
+      const speed = 30 + (i % 5) * 10;
+      const bx = (seed * 7 + distance * 2) % CANVAS_W;
+      const by = CANVAS_H - ((distance * speed * 0.05 + seed * 9) % (CANVAS_H + 40));
+      const r = 2 + (i % 4);
+      ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+
+    // Banderines de circo (rojo/dorado) en el borde superior
+    ctx.save();
+    const buntingH = 14;
+    for (let x = 0; x < CANVAS_W; x += 24) {
+      ctx.fillStyle = (Math.floor(x / 24) % 2 === 0) ? '#ef4444' : '#FBBF24';
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 24, 0);
+      ctx.lineTo(x + 12, buntingH);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   function drawLanes() {
@@ -428,11 +488,10 @@
     const dashOffset = (distance * 8) % 24;
     if (levelMode === 2) {
       ctx.lineDashOffset = dashOffset;
-      const midY1 = (LANE_Y[0] + LANE_Y[1]) / 2;
-      const midY2 = (LANE_Y[1] + LANE_Y[2]) / 2;
-      [midY1, midY2].forEach(y => {
+      for (let i = 0; i < LANE_Y.length - 1; i++) {
+        const y = (LANE_Y[i] + LANE_Y[i + 1]) / 2;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_W, y); ctx.stroke();
-      });
+      }
     } else {
       ctx.lineDashOffset = -dashOffset;
       [73, 147].map(x => x / 220 * CANVAS_W).forEach(x => {
