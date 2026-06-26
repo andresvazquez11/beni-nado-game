@@ -212,9 +212,22 @@ function drawObstacleRivalHoriz(ctx, x, y, strokePhase) {
 function drawObstacleBuoy(ctx, x, y) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = '#ef4444';
+
+  // Gradiente esférico para la boya (volumen 3D)
+  const buoyGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 11);
+  buoyGrad.addColorStop(0, '#fca5a5');
+  buoyGrad.addColorStop(0.4, '#ef4444');
+  buoyGrad.addColorStop(1, '#7f1d1d');
+
+  ctx.fillStyle = buoyGrad;
   ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill();
-  ctx.fillStyle = '#fff';
+
+  const stripeGrad = ctx.createLinearGradient(0, -3, 0, 3);
+  stripeGrad.addColorStop(0, '#e2e8f0');
+  stripeGrad.addColorStop(0.5, '#ffffff');
+  stripeGrad.addColorStop(1, '#94a3b8');
+
+  ctx.fillStyle = stripeGrad;
   ctx.fillRect(-11, -3, 22, 6);
   ctx.restore();
 }
@@ -226,14 +239,28 @@ function drawObstacleRival(ctx, x, y, strokePhase) {
 function drawObstacleJellyfish(ctx, x, y) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = '#f9a8d4';
+
+  // Campana de la medusa con transparencia y luz
+  const jellyGrad = ctx.createRadialGradient(0, -3, 2, 0, 0, 11);
+  jellyGrad.addColorStop(0, 'rgba(253, 232, 243, 0.9)');
+  jellyGrad.addColorStop(0.6, 'rgba(249, 168, 212, 0.8)');
+  jellyGrad.addColorStop(1, 'rgba(190, 24, 93, 0.6)');
+
+  ctx.fillStyle = jellyGrad;
   ctx.beginPath(); ctx.ellipse(0, 0, 11, 9, 0, Math.PI, 0); ctx.fill();
+
+  // Tentáculos ondulantes (curva bezier simulando el movimiento del agua)
   for (let i = -2; i <= 2; i++) {
-    ctx.strokeStyle = '#f9a8d4';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.7)';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(i * 4, 2);
-    ctx.lineTo(i * 4, 14 + Math.abs(i) * 2);
+    ctx.bezierCurveTo(
+      i * 4 - 2, 8,
+      i * 4 + 2, 10,
+      i * 4, 14 + Math.abs(i) * 2
+    );
     ctx.stroke();
   }
   ctx.restore();
@@ -242,10 +269,28 @@ function drawObstacleJellyfish(ctx, x, y) {
 function drawObstacleBoat(ctx, x, y) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = '#94a3b8';
+
+  // Casco del bote con gradiente metálico/plástico
+  const boatGrad = ctx.createLinearGradient(-20, -8, 20, 10);
+  boatGrad.addColorStop(0, '#f1f5f9');
+  boatGrad.addColorStop(0.5, '#94a3b8');
+  boatGrad.addColorStop(1, '#334155');
+
+  ctx.fillStyle = boatGrad;
   ctx.beginPath();
   ctx.moveTo(-20, -8); ctx.lineTo(20, -8); ctx.lineTo(13, 10); ctx.lineTo(-13, 10);
-  ctx.closePath(); ctx.fill();
+  ctx.closePath();
+  ctx.fill();
+
+  // Interior del bote (da profundidad)
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.moveTo(-16, -6);
+  ctx.lineTo(16, -6);
+  ctx.lineTo(11, 2);
+  ctx.lineTo(-11, 2);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 
@@ -309,15 +354,50 @@ function drawNamePopup(ctx, x, y, name, progress) {
   ctx.restore();
 }
 
+// Aro de agua estilo circo: hay que saltar a través (Nivel 2). Bobea suavemente.
+function drawWaterRing(ctx, x, y, t) {
+  const bob = Math.sin(t * 3) * 4;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#ef4444';
+  ctx.beginPath(); ctx.ellipse(0, 0, 18, 16, 0, 0, 7); ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#FBBF24';
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath(); ctx.ellipse(0, 0, 18, 16, 0, 0, 7); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 function drawPowerup(ctx, x, y, type) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = type === 'boost' ? '#22c55e' : '#0ea5e9';
+
+  // Esfera brillante de energía
+  const colorBase = type === 'boost' ? '#22c55e' : '#0ea5e9';
+  const colorLight = type === 'boost' ? '#86efac' : '#7dd3fc';
+  const colorDark = type === 'boost' ? '#14532d' : '#082f49';
+
+  const powerGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 12);
+  powerGrad.addColorStop(0, colorLight);
+  powerGrad.addColorStop(0.5, colorBase);
+  powerGrad.addColorStop(1, colorDark);
+
+  ctx.fillStyle = powerGrad;
   ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.stroke();
+
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 14px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 2;
+  ctx.shadowOffsetY = 1;
   ctx.fillText(type === 'boost' ? '⚡' : '🛡', 0, 1);
   ctx.restore();
 }

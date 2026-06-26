@@ -7,27 +7,34 @@
   const CANVAS_H = 640;
   const LANE_X = [CANVAS_W * 0.25, CANVAS_W * 0.5, CANVAS_W * 0.75];
   const LANE_Y = [CANVAS_H * 0.3, CANVAS_H * 0.5, CANVAS_H * 0.7];
-  const SWIMMER_Y = CANVAS_H * 0.72; // Nivel 1: posición fija vertical del nadador
-  const SWIMMER_X = CANVAS_W * 0.22; // Nivel 2: posición fija horizontal del nadador
-  const POOL_TO_OCEAN_DISTANCE = 150; // metros
+  const SWIMMER_Y = CANVAS_H * 0.72;
+  const SWIMMER_X = CANVAS_W * 0.22;
+  const POOL_TO_OCEAN_DISTANCE = 150;
   const POPUP_DURATION = 0.9;
 
   let canvas, ctx, dpr = 1, scale = 1;
-  let state = 'menu'; // menu | countdown | playing | gameover
-  let levelMode = 1; // 1 = vertical (carrera infinita) | 2 = horizontal (circo)
+  let state = 'menu';
+  let levelMode = 1; 
   let player = { name: '', skin: SKINS[0] };
 
   let lane = 1, lanePos = LANE_X[1], laneTargetPos = LANE_X[1];
   let distance = 0, carlitos = 0, amigos = 0, hearts = 3, invulnTimer = 0;
-  let speed = 90; // px/seg lógicos avanzando "hacia delante" (representado como velocidad de scroll)
+  let speed = 90;
   let strokePhase = 0;
+  
+  // Físicas de Salto (Circus Charlie)
+  let jumpZ = 0; 
+  let jumpVelocity = 0;
+  const JUMP_POWER = 350;
+  const GRAVITY = 950;
+
   let activePowerup = null, powerupTimer = 0;
-  let entities = []; // {type, lane, pos, ...} - pos = coordenada en el eje de scroll
-  let popups = []; // {x, y, name, age} - texto flotante al recoger una cara
-  let collected = {}; // nombre -> veces recogido, para el resumen final
+  let entities = [];
+  let popups = [];
+  let collected = {};
   let spawnTimer = 0, spawnInterval = 1.1;
   let lastTs = 0;
-  let envMix = 0; // 0 = piscina, 1 = mar abierto
+  let envMix = 0; 
 
   // ---------- Setup canvas ----------
   function setupCanvas() {
@@ -43,10 +50,9 @@
     canvas.width = CANVAS_W * dpr;
     canvas.height = CANVAS_H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true; // Mejorado para renderizado suave de luces
   }
 
-  // ---------- Skins picker ----------
   function buildSkinPicker() {
     const el = document.getElementById('skin-picker');
     el.innerHTML = '';
@@ -65,7 +71,6 @@
     player.skin = SKINS[0];
   }
 
-  // ---------- Pantallas ----------
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -94,11 +99,18 @@
       if (levelMode === 2) {
         if (e.key === 'ArrowUp') changeLane(-1);
         if (e.key === 'ArrowDown') changeLane(1);
+        if (e.code === 'Space' && jumpZ === 0) jumpVelocity = JUMP_POWER;
       } else {
         if (e.key === 'ArrowLeft') changeLane(-1);
         if (e.key === 'ArrowRight') changeLane(1);
       }
     });
+
+    document.getElementById('screen-game').addEventListener('touchstart', (e) => {
+      if (levelMode === 2 && state === 'playing' && e.target.tagName !== 'BUTTON' && jumpZ === 0) {
+        jumpVelocity = JUMP_POWER;
+      }
+    }, { passive: true });
   }
 
   function updateLaneButtons() {
@@ -119,7 +131,6 @@
     laneTargetPos = (levelMode === 2 ? LANE_Y : LANE_X)[lane];
   }
 
-  // ---------- Spawner ----------
   function spawnStartPos() {
     return levelMode === 2 ? CANVAS_W + 30 : -30;
   }
@@ -127,15 +138,16 @@
   function spawnEntity() {
     const r = Math.random();
     const spawnLane = Math.floor(Math.random() * LANES);
-    if (r < 0.5) {
+    
+    if (levelMode === 2 && Math.random() < 0.20) {
+      entities.push({ type: 'water_ring', lane: spawnLane, pos: spawnStartPos(), hit: false });
+    } else if (r < 0.5) {
       entities.push({ type: 'obstacle', kind: pickObstacleKind(), lane: spawnLane, pos: spawnStartPos(), hit: false });
-      // "Esquiva dos veces": de vez en cuando, un segundo obstáculo en otro carril (estilo Circus Charlie).
       if (levelMode === 2 && Math.random() < 0.25) {
         const otherLane = (spawnLane + 1 + Math.floor(Math.random() * (LANES - 1))) % LANES;
         entities.push({ type: 'obstacle', kind: pickObstacleKind(), lane: otherLane, pos: spawnStartPos() - 60, hit: false });
       }
     } else if (r < 0.85) {
-      // Carlos es el coleccionable principal (más frecuente); el resto son amigos (variedad).
       const isCarlos = Math.random() < 0.5;
       entities.push({
         type: 'coin',
@@ -157,7 +169,6 @@
     return kinds[Math.floor(Math.random() * kinds.length)];
   }
 
-  // ---------- Ciclo de partida ----------
   function startGame(chosenLevel) {
     levelMode = chosenLevel || levelMode;
     player.name = sanitizeName(document.getElementById('player-name').value);
@@ -169,8 +180,10 @@
     lanePos = laneTargetPos;
     distance = 0; carlitos = 0; amigos = 0; hearts = 3; invulnTimer = 0;
     speed = 90; strokePhase = 0;
+    jumpZ = 0; jumpVelocity = 0;
     activePowerup = null; powerupTimer = 0;
-    entities = []; popups = []; collected = {}; spawnTimer = 0; spawnInterval = 1.1;
+    entities = []; popups = [];
+    collected = {}; spawnTimer = 0; spawnInterval = 1.1;
     envMix = 0;
 
     updateLaneButtons();
@@ -206,22 +219,19 @@
     const best = parseFloat(localStorage.getItem(bestKey) || '0');
     const isRecord = score > best;
     if (isRecord) localStorage.setItem(bestKey, score.toFixed(0));
-
     document.getElementById('end-distance').textContent = carlitos + ' CARLITOS · ' + amigos + ' AMIGOS';
     document.getElementById('end-record').textContent =
-      (isRecord ? 'Nuevo récord personal 🎉 · ' : ('Tu mejor marca: ' + Math.max(best, score) + ' puntos · ')) +
+      (isRecord ? 'Nuevo récord 🎉 · ' : ('Tu mejor marca: ' + Math.max(best, score) + ' pts · ')) +
       Math.round(distance) + 'm recorridos';
-
+    
     const namesList = Object.keys(collected)
       .map(name => name + (collected[name] > 1 ? ' x' + collected[name] : ''))
       .join(', ');
     document.getElementById('end-collected').textContent = namesList ? 'Atrapaste a: ' + namesList : '';
     document.getElementById('end-leaderboard-label').textContent = '🏆 Récords — Nivel ' + levelMode;
-
     Leaderboard.submitScore(player.name, carlitos, amigos, Math.round(distance), player.skin.id, levelMode)
       .then(renderLeaderboardEnd)
       .catch(() => renderLeaderboardEnd());
-
     showScreen('screen-end');
   }
 
@@ -250,7 +260,6 @@
     }
   }
 
-  // ---------- HUD ----------
   function updateHUD() {
     document.getElementById('hud-distance').textContent = Math.round(distance) + 'm';
     document.getElementById('hud-carlitos').textContent = '🧒 ' + carlitos;
@@ -265,7 +274,6 @@
     }
   }
 
-  // ---------- Bucle principal ----------
   function loop(ts) {
     if (state !== 'playing') return;
     const dt = Math.min((ts - lastTs) / 1000, 0.05);
@@ -278,17 +286,22 @@
   }
 
   function update(dt) {
-    // dificultad creciente
     speed = 90 + distance * 0.35;
     spawnInterval = Math.max(0.45, 1.1 - distance * 0.003);
 
     const speedMult = activePowerup === 'boost' ? 1.8 : 1;
     distance += (speed * speedMult * dt) / 20;
     envMix = Math.min(1, distance / POOL_TO_OCEAN_DISTANCE);
-
     strokePhase += dt * 2.2 * speedMult;
-    lanePos += (laneTargetPos - lanePos) * Math.min(1, dt * 12);
+    
+    // Físicas del salto
+    if (jumpZ > 0 || jumpVelocity !== 0) {
+      jumpZ += jumpVelocity * dt;
+      jumpVelocity -= GRAVITY * dt;
+      if (jumpZ <= 0) { jumpZ = 0; jumpVelocity = 0; }
+    }
 
+    lanePos += (laneTargetPos - lanePos) * Math.min(1, dt * 12);
     if (invulnTimer > 0) invulnTimer -= dt;
     if (activePowerup) {
       powerupTimer -= dt;
@@ -333,6 +346,7 @@
         e.hit = true;
         const name = e.face === 'carlos' ? 'Carlos' : FRIEND_NAMES[e.face];
         if (e.face === 'carlos') carlitos++; else amigos++;
+        
         collected[name] = (collected[name] || 0) + 1;
         popups.push({ x: popupPos.x, y: popupPos.y - 20, name, age: 0 });
         entities = entities.filter(x => x !== e);
@@ -342,7 +356,22 @@
         powerupTimer = e.kind === 'boost' ? 5 : 8;
         if (e.kind === 'shield') activePowerup = 'shield';
         entities = entities.filter(x => x !== e);
+      } else if (e.type === 'water_ring') {
+        if (jumpZ > 15 && jumpZ < 60) {
+          e.hit = true;
+          amigos += 5;
+          collected['Aro de estilo'] = (collected['Aro de estilo'] || 0) + 1;
+          popups.push({ x: popupPos.x, y: popupPos.y - 40, name: '+5 ESTILO!', age: 0 });
+          entities = entities.filter(x => x !== e);
+        } else if (jumpZ === 0 && Math.abs(e.pos - fixedPos) < 10) {
+          if (invulnTimer > 0) return;
+          hearts--;
+          invulnTimer = 1.2;
+          e.hit = true;
+          entities = entities.filter(x => x !== e);
+        }
       } else if (e.type === 'obstacle') {
+        if (levelMode === 2 && jumpZ > 25) return; // Esquiva en el aire
         if (invulnTimer > 0) return;
         if (activePowerup === 'shield') {
           activePowerup = null;
@@ -358,7 +387,6 @@
     });
   }
 
-  // ---------- Render ----------
   function entityScreenPos(e) {
     if (levelMode === 2) return { x: e.pos, y: LANE_Y[e.lane] };
     return { x: LANE_X[e.lane], y: e.pos };
@@ -368,12 +396,20 @@
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     drawBackground();
     drawLanes();
+    
     entities.forEach(drawEntity);
+    
     if (levelMode === 2) {
-      drawSwimmerHoriz(ctx, SWIMMER_X, lanePos, player.skin, strokePhase, invulnTimer > 0);
+      ctx.fillStyle = 'rgba(0,30,60,0.2)';
+      ctx.beginPath(); 
+      ctx.ellipse(SWIMMER_X - (jumpZ/4), lanePos + 10 + (jumpZ/4), Math.max(5, 13 - (jumpZ/15)), Math.max(2, 5 - (jumpZ/20)), 0, 0, 7); 
+      ctx.fill();
+      
+      drawSwimmerHoriz(ctx, SWIMMER_X, lanePos - jumpZ, player.skin, strokePhase, invulnTimer > 0, activePowerup !== null);
     } else {
       drawSwimmer(ctx, lanePos, SWIMMER_Y, player.skin, strokePhase, invulnTimer > 0);
     }
+    
     popups.forEach(p => drawNamePopup(ctx, p.x, p.y, p.name, p.age));
   }
 
@@ -395,18 +431,12 @@
       const midY1 = (LANE_Y[0] + LANE_Y[1]) / 2;
       const midY2 = (LANE_Y[1] + LANE_Y[2]) / 2;
       [midY1, midY2].forEach(y => {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(CANVAS_W, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_W, y); ctx.stroke();
       });
     } else {
       ctx.lineDashOffset = -dashOffset;
       [73, 147].map(x => x / 220 * CANVAS_W).forEach(x => {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, CANVAS_H);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_H); ctx.stroke();
       });
     }
     ctx.restore();
@@ -419,6 +449,7 @@
       else drawFriendFace(ctx, x, y, e.face, distance + e.lane);
     }
     else if (e.type === 'powerup') drawPowerup(ctx, x, y, e.kind);
+    else if (e.type === 'water_ring') drawWaterRing(ctx, x, y, strokePhase);
     else if (e.type === 'obstacle') {
       if (e.kind === 'buoy') drawObstacleBuoy(ctx, x, y);
       else if (e.kind === 'rival') {
@@ -442,7 +473,6 @@
     return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
   }
 
-  // ---------- Records (pantalla aparte) ----------
   let recordsLevel = 1;
   function loadRecords(level) {
     recordsLevel = level;
@@ -450,7 +480,6 @@
     Leaderboard.getTop(20, level).then(rows => renderLeaderboardList('leaderboard-list-2', rows));
   }
 
-  // ---------- Init ----------
   function init() {
     setupCanvas();
     setupInput();
@@ -475,7 +504,6 @@
     document.querySelectorAll('.level-card').forEach(card => {
       card.addEventListener('click', () => startGame(Number(card.dataset.level)));
     });
-
     document.getElementById('btn-retry').addEventListener('click', () => startGame(levelMode));
     document.getElementById('btn-menu').addEventListener('click', () => showScreen('screen-menu'));
     document.getElementById('btn-leaderboard').addEventListener('click', () => {
@@ -486,7 +514,6 @@
       tab.addEventListener('click', () => loadRecords(Number(tab.dataset.level)));
     });
     document.getElementById('btn-records-back').addEventListener('click', () => showScreen('screen-menu'));
-
     showScreen('screen-menu');
   }
 
