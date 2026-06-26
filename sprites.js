@@ -206,10 +206,37 @@ function drawSwimmerHoriz(ctx, x, y, skin, strokePhase, invulnerable) {
 }
 
 function drawObstacleRivalHoriz(ctx, x, y, strokePhase) {
+  drawDangerAura(ctx, x, y, 22);
   drawSwimmerHoriz(ctx, x, y, SKINS[4], strokePhase, false);
 }
 
+// Aro rojo punteado y pulsante detrás de cualquier obstáculo: señal clara de "peligro, esquiva".
+function drawDangerAura(ctx, x, y, r) {
+  const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 180);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = 0.35 + pulse * 0.3;
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke();
+  ctx.restore();
+}
+
+// Halo dorado pulsante detrás de cualquier power-up: señal clara de "esto es bueno, recógelo".
+function drawPowerGlow(ctx, x, y, r) {
+  const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 150);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = 0.3 + pulse * 0.35;
+  ctx.strokeStyle = '#FBBF24';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, r + 3 + pulse * 3, 0, 7); ctx.stroke();
+  ctx.restore();
+}
+
 function drawObstacleBuoy(ctx, x, y) {
+  drawDangerAura(ctx, x, y, 17);
   ctx.save();
   ctx.translate(x, y);
 
@@ -233,10 +260,12 @@ function drawObstacleBuoy(ctx, x, y) {
 }
 
 function drawObstacleRival(ctx, x, y, strokePhase) {
+  drawDangerAura(ctx, x, y, 22);
   drawSwimmer(ctx, x, y, SKINS[4], strokePhase, false);
 }
 
 function drawObstacleJellyfish(ctx, x, y) {
+  drawDangerAura(ctx, x, y, 17);
   ctx.save();
   ctx.translate(x, y);
 
@@ -267,6 +296,7 @@ function drawObstacleJellyfish(ctx, x, y) {
 }
 
 function drawObstacleBoat(ctx, x, y) {
+  drawDangerAura(ctx, x, y, 24);
   ctx.save();
   ctx.translate(x, y);
 
@@ -371,6 +401,7 @@ function drawWaterRing(ctx, x, y, t) {
 }
 
 function drawPowerup(ctx, x, y, type) {
+  drawPowerGlow(ctx, x, y, 12);
   ctx.save();
   ctx.translate(x, y);
 
