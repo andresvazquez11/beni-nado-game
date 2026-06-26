@@ -31,6 +31,24 @@
     <button id="btn-leaderboard" class="btn-link">Ver récords 🏆</button>
   </section>
 
+  <!-- PANTALLA SELECCIÓN DE NIVEL -->
+  <section id="screen-levels" class="screen">
+    <h2 class="end-title">Elige nivel</h2>
+    <div class="level-cards">
+      <div class="level-card" data-level="1">
+        <h3>🏊 NIVEL 1</h3>
+        <p>Piscina → Mar abierto</p>
+        <p class="level-rules">Esquiva a los lados, avanzas hacia delante</p>
+      </div>
+      <div class="level-card" data-level="2">
+        <h3>🎪 NIVEL 2</h3>
+        <p>Carrera estilo circo</p>
+        <p class="level-rules">Esquiva arriba/abajo, avanzas hacia la derecha</p>
+      </div>
+    </div>
+    <button id="btn-levels-back" class="btn-link">← Volver</button>
+  </section>
+
   <!-- PANTALLA 2: JUEGO -->
   <section id="screen-game" class="screen">
     <canvas id="game-canvas"></canvas>
@@ -58,7 +76,7 @@
     <div id="end-collected" class="end-collected"></div>
 
     <div id="leaderboard-box" class="leaderboard-box">
-      <p class="label">🏆 Récords</p>
+      <p class="label" id="end-leaderboard-label">🏆 Récords</p>
       <ol id="leaderboard-list"></ol>
     </div>
 
@@ -69,6 +87,10 @@
   <!-- PANTALLA RÉCORDS (desde el menú) -->
   <section id="screen-records" class="screen">
     <h2 class="end-title">🏆 Récords</h2>
+    <div class="level-tabs">
+      <button class="level-tab active" data-level="1">Nivel 1</button>
+      <button class="level-tab" data-level="2">Nivel 2</button>
+    </div>
     <div class="leaderboard-box">
       <ol id="leaderboard-list-2"></ol>
     </div>
@@ -79,9 +101,9 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js?v=9"></script>
-<script src="leaderboard.js?v=9"></script>
-<script src="sprites.js?v=9"></script>
-<script src="game.js?v=9"></script>
+<script src="firebase-config.js?v=10"></script>
+<script src="leaderboard.js?v=10"></script>
+<script src="sprites.js?v=10"></script>
+<script src="game.js?v=10"></script>
 </body>
 </html>

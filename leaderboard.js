@@ -28,8 +28,9 @@ const Leaderboard = (function () {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(rows));
   }
 
-  function submitScore(name, carlitos, amigos, distance, skinId) {
+  function submitScore(name, carlitos, amigos, distance, skinId, level) {
     const score = carlitos + amigos;
+    const lvl = level || 1;
     if (usingFirebase) {
       return db.collection('scores').add({
         name: name,
@@ -38,39 +39,45 @@ const Leaderboard = (function () {
         score: score,
         distance: distance,
         skin: skinId,
+        level: lvl,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       }).catch(err => {
         console.warn('Error al guardar en Firestore, usando local.', err);
-        return submitScoreLocal(name, carlitos, amigos, score, distance, skinId);
+        return submitScoreLocal(name, carlitos, amigos, score, distance, skinId, lvl);
       });
     }
-    return submitScoreLocal(name, carlitos, amigos, score, distance, skinId);
+    return submitScoreLocal(name, carlitos, amigos, score, distance, skinId, lvl);
   }
 
-  function submitScoreLocal(name, carlitos, amigos, score, distance, skinId) {
+  function submitScoreLocal(name, carlitos, amigos, score, distance, skinId, level) {
     const rows = localGetAll();
-    rows.push({ name, carlitos, amigos, score, distance, skin: skinId });
+    rows.push({ name, carlitos, amigos, score, distance, skin: skinId, level });
     localSave(rows);
     return Promise.resolve();
   }
 
-  function getTop(limit) {
+  function getTop(limit, level) {
+    const lvl = level || 1;
     if (usingFirebase) {
       return db.collection('scores')
+        .where('level', '==', lvl)
         .orderBy('score', 'desc')
         .limit(limit)
         .get()
         .then(snap => snap.docs.map(d => d.data()))
         .catch(err => {
           console.warn('Error al leer Firestore, usando local.', err);
-          return getTopLocal(limit);
+          return getTopLocal(limit, lvl);
         });
     }
-    return getTopLocal(limit);
+    return getTopLocal(limit, lvl);
   }
 
-  function getTopLocal(limit) {
-    const rows = localGetAll().sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, limit);
+  function getTopLocal(limit, level) {
+    const rows = localGetAll()
+      .filter(r => (r.level || 1) === level)
+      .sort((a, b) => (b.score || 0) - (a.score || 0))
+      .slice(0, limit);
     return Promise.resolve(rows);
   }
 

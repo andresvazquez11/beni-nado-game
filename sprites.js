@@ -117,6 +117,98 @@ function drawSwimmer(ctx, x, y, skin, strokePhase, invulnerable) {
   ctx.restore();
 }
 
+// Variante horizontal: mismo cuerpo/gorro/gafas que drawSwimmer, pero recompuesto para que
+// se lea nadando hacia la derecha (cabeza al frente/derecha, piernas a la izquierda/atrás,
+// torso horizontal). La cara se mantiene derecha (no rotada) para que siga siendo reconocible.
+function drawSwimmerHoriz(ctx, x, y, skin, strokePhase, invulnerable) {
+  const cap = skin.cap;
+  const suit = skin.suit;
+  const skinTone = '#ffcfa3';
+  const armSwing = Math.sin(strokePhase * Math.PI * 2);
+
+  ctx.save();
+  ctx.translate(x, y);
+  if (invulnerable) ctx.globalAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 60);
+
+  // estela de salpicaduras (queda atrás, a la izquierda, porque avanza a la derecha)
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.beginPath(); ctx.arc(-22, -2 + armSwing * 2, 3, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(-27, 4 - armSwing * 2, 2.4, 0, 7); ctx.fill();
+
+  // brazo trasero (queda hacia atrás/izquierda)
+  ctx.fillStyle = skinTone;
+  ctx.save();
+  ctx.translate(-8, -4);
+  ctx.rotate(1.97 - armSwing * 0.5);
+  ctx.beginPath(); ctx.ellipse(0, 0, 4.5, 9, 0, 0, 7); ctx.fill();
+  ctx.restore();
+
+  // piernas / aleteo (a la izquierda, detrás del torso)
+  ctx.fillStyle = suit;
+  ctx.save();
+  ctx.translate(-26, -3);
+  ctx.rotate(1.32 + armSwing * 0.3);
+  ctx.beginPath(); ctx.ellipse(0, 0, 3.6, 7, 0, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.translate(-27, 5);
+  ctx.rotate(1.82 - armSwing * 0.3);
+  ctx.beginPath(); ctx.ellipse(0, 0, 3.6, 7, 0, 0, 7); ctx.fill();
+  ctx.restore();
+
+  // torso (horizontal en vez de vertical)
+  ctx.fillStyle = suit === '#0f172a' ? cap : suit;
+  ctx.beginPath(); ctx.ellipse(-10, 0, 13, 10, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = suit;
+  ctx.beginPath(); ctx.ellipse(-16, 0, 8, 10, 0, 0, 7); ctx.fill();
+
+  // brazo delantero (se extiende hacia delante/derecha)
+  ctx.fillStyle = skinTone;
+  ctx.save();
+  ctx.translate(8, -10);
+  ctx.rotate(1.27 - armSwing * 0.6);
+  ctx.beginPath(); ctx.ellipse(0, 0, 4.8, 10, 0, 0, 7); ctx.fill();
+  ctx.restore();
+
+  // cabeza (al frente, lado derecho) — sin rotar, para que la cara se mantenga reconocible
+  ctx.fillStyle = skinTone;
+  ctx.beginPath(); ctx.arc(11, 0, 12.5, 0, 7); ctx.fill();
+
+  // gorro
+  ctx.fillStyle = cap;
+  ctx.beginPath();
+  ctx.arc(11, -1.5, 12.5, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // gafas
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath(); ctx.ellipse(6.8, 0, 3.4, 3.8, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(15.2, 0, 3.4, 3.8, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#bfe9ff';
+  ctx.beginPath(); ctx.ellipse(6.8, -1, 1.2, 1.4, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(15.2, -1, 1.2, 1.4, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(9, -1, 4.4, 1.4);
+
+  // mofletes
+  ctx.fillStyle = 'rgba(253,164,175,0.55)';
+  ctx.beginPath(); ctx.arc(8, 6, 2.2, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(8, -6, 2.2, 0, 7); ctx.fill();
+
+  // sonrisa
+  ctx.strokeStyle = '#7c2d12';
+  ctx.lineWidth = 1.4;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(11, 5, 4.5, 0.2, Math.PI - 0.2); ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawObstacleRivalHoriz(ctx, x, y, strokePhase) {
+  drawSwimmerHoriz(ctx, x, y, SKINS[4], strokePhase, false);
+}
+
 function drawObstacleBuoy(ctx, x, y) {
   ctx.save();
   ctx.translate(x, y);

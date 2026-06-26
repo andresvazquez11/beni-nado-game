@@ -222,6 +222,44 @@ html, body {
 }
 .lane-btn:active { background: rgba(251,191,36,0.7); }
 
+/* LEVEL SELECT SCREEN */
+.level-cards {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 20px 0;
+}
+.level-card {
+  background: #1e293b;
+  border: 2px solid #334155;
+  border-radius: 12px;
+  padding: 16px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .12s, border-color .12s;
+}
+.level-card:active { transform: scale(0.97); }
+.level-card h3 { margin: 0 0 6px; color: var(--yellow); font-size: 17px; }
+.level-card p { margin: 2px 0; color: #fff; font-size: 13px; }
+.level-card .level-rules { color: #94a3b8; font-size: 11.5px; }
+.level-card.selected { border-color: var(--yellow); }
+
+/* LEVEL TABS (records screen) */
+.level-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.level-tab {
+  background: #1e293b;
+  border: 2px solid #334155;
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.level-tab.active { border-color: var(--yellow); color: var(--yellow); }
+
 /* END SCREEN */
 .end-title { color: var(--red); font-size: 22px; margin: 30px 0 10px; text-align: center; }
 .end-distance {
