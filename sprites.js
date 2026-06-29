@@ -384,16 +384,19 @@ function drawNamePopup(ctx, x, y, name, progress) {
   ctx.restore();
 }
 
-// Aro de agua estilo circo: hay que saltar a través (Nivel 2). Bobea suavemente.
+// Aro de agua estilo circo: SIEMPRE bueno — salta a través (Nivel 2) para puntos extra,
+// si lo dejas pasar no hay penalización. Dorado a propósito, igual que los power-ups,
+// para que se lea claramente como "esto es un bonus", nunca como peligro.
 function drawWaterRing(ctx, x, y, t) {
   const bob = Math.sin(t * 3) * 4;
+  drawPowerGlow(ctx, x, y + bob, 18);
   ctx.save();
   ctx.translate(x, y + bob);
   ctx.lineWidth = 6;
-  ctx.strokeStyle = '#ef4444';
+  ctx.strokeStyle = '#FBBF24';
   ctx.beginPath(); ctx.ellipse(0, 0, 18, 16, 0, 0, 7); ctx.stroke();
   ctx.lineWidth = 3;
-  ctx.strokeStyle = '#FBBF24';
+  ctx.strokeStyle = '#fff7ed';
   ctx.setLineDash([6, 6]);
   ctx.beginPath(); ctx.ellipse(0, 0, 18, 16, 0, 0, 7); ctx.stroke();
   ctx.setLineDash([]);

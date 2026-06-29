@@ -358,17 +358,13 @@
         if (e.kind === 'shield') activePowerup = 'shield';
         entities = entities.filter(x => x !== e);
       } else if (e.type === 'water_ring') {
+        // Bonus puro: saltar a través suma puntos extra. Si no saltas, simplemente
+        // sigue de largo sin penalización — nunca hace daño.
         if (jumpZ > 15 && jumpZ < 60) {
           e.hit = true;
           amigos += 5;
           collected['Aro de estilo'] = (collected['Aro de estilo'] || 0) + 1;
           popups.push({ x: popupPos.x, y: popupPos.y - 40, name: '+5 ESTILO!', age: 0 });
-          entities = entities.filter(x => x !== e);
-        } else if (jumpZ === 0 && Math.abs(e.pos - fixedPos) < 10) {
-          if (invulnTimer > 0) return;
-          hearts--;
-          invulnTimer = 1.2;
-          e.hit = true;
           entities = entities.filter(x => x !== e);
         }
       } else if (e.type === 'obstacle') {
